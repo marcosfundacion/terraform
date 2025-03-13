@@ -12,9 +12,17 @@ phases:
       - terraform --version
       - echo "Installing Checkov..."
       - pip install checkov
+      - echo "Installing jq..."
+      - yum install -y jq  # Ensure jq is installed for JSON parsing
 
   pre_build:
     commands:
+      - echo "Assuming IAM role..."
+      - ROLE_ARN="arn:aws:iam::699631259047:role/TerraformDeploymentRole"  # Replace with your role ARN
+      - CREDENTIALS=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name CodeBuildSession)
+      - export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r .Credentials.SessionToken)
       - echo "Running Checkov for static code analysis..."
       #- checkov -d .  # Adjust the directory as needed
 
