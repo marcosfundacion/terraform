@@ -21,6 +21,11 @@ resource "aws_instance" "web" {
   instance_type = var.instance_type
   subnet_id = "subnet-0b57ecda55d5312e4"
   security_groups = ["sg-00ec8fbcfb0ef2a34"]
+  root_block_device {
+    volume_size = 10
+    volume_type = "gp3"
+    encrypted = true
+  }
   #vpc-08b1b053d7a483a2e
   tags = {
     Name = "HelloWorld"
