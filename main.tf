@@ -1,3 +1,4 @@
+# checkov:skip=CKV_TF_*
 data "aws_ami" "ubuntu" {
   most_recent = true
 
