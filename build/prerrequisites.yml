@@ -1,0 +1,59 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - echo "Installing dependencies"
+      - pip3 install checkov jq
+
+  pre_build:
+    commands:
+      - echo "Determining target AWS account based on environment"
+      - |
+        case "$CODEBUILD_SOURCE_VERSION" in
+          "refs/heads/prod") AWS_ACCOUNT_ID="123456789012"; ENV="prod";;
+          "refs/heads/qa") AWS_ACCOUNT_ID="234567890123"; ENV="qa";;
+          "refs/heads/dev") AWS_ACCOUNT_ID="699631259047"; ENV="dev";;
+          "refs/heads/dr") AWS_ACCOUNT_ID="456789012345"; ENV="dr";;
+          *) echo "Unknown branch, exiting"; exit 1;;
+        esac
+      - echo "Deploying to AWS Account: $AWS_ACCOUNT_ID for environment: $ENV"
+
+      - echo "Assuming role in target AWS account"
+      - |
+        CREDENTIALS=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID:role/TerraformDeploymentRole" --role-session-name TerraformSession)
+        export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')
+        export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')
+        export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')
+
+      - echo "Initializing Terraform"
+      - terraform init
+
+      - echo "Setting Terraform variables for $ENV environment"
+      - cp ./environments/$ENV/terraform.tfvars terraform.tfvars
+
+      - echo "Creating Terraform artifact"
+      - zip -r terraform_artifact.zip . -x "environments/*" -x ".git/*" -x "iac_azure_pipeline.yml"
+
+  build:
+    commands:
+      - echo "Executing Checkov"
+      - mkdir -p checkov_report
+      - checkov -o junitxml --framework terraform --skip-check CKV_AWS_LOW --download-external-modules true -d ./ -s > ./checkov_report/checkov.xml
+      - checkov -o json --framework terraform --download-external-modules true --skip-check CKV_AWS_LOW -d ./ -s
+
+  post_build:
+    commands:
+      - echo "Uploading artifacts"
+      - mkdir -p ${CODEBUILD_ARTIFACTS}/Tfvars
+      - cp terraform.tfvars ${CODEBUILD_ARTIFACTS}/Tfvars/
+      - cp -r checkov_report ${CODEBUILD_ARTIFACTS}/
+      - cp terraform_artifact.zip ${CODEBUILD_ARTIFACTS}/
+
+artifacts:
+  files:
+    - terraform_artifact.zip
+    - checkov_report/*
+  discard-paths: no
