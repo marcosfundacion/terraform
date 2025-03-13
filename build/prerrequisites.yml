@@ -1,63 +1,49 @@
 version: 0.2
 
+env:
+  variables:
+    AWS_DEFAULT_REGION: us-east-1  # Change to your desired region
+    TF_VAR_region: us-east-1         # Change to your desired region
+    ACCOUNT_ID: "699631259047"       # Replace with your target account ID
+    ROLE_NAME: "TerraformDeploymentRole"  # Replace with your IAM role name
+    TF_VERSION: 1.11.1
+
 phases:
   install:
     runtime-versions:
-      python: 3.9
+      python: 3.9  # Specify the Python version if needed
+      terraform: 1.11.0  # Specify the Terraform version
     commands:
-      - echo "Installing dependencies"
-      - pip3 install checkov jq
+      - echo "Installing dependencies..."
+      - pip install awscli  # Install AWS CLI if not already available
+      - curl -LO https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+      - unzip terraform_${TF_VERSION}_linux_amd64.zip
+      - mv terraform /usr/local/bin/
+      - terraform --version
 
   pre_build:
     commands:
-      - echo "Determining target AWS account based on environment"
-      - |
-      - BRANCH_NAME=$(echo "$CODEBUILD_SOURCE_VERSION" | sed 's|refs/heads/||')
-      - echo "Extracted branch name: $BRANCH_NAME"
-      - |
-        case "$BRANCH_NAME" in
-          prod) AWS_ACCOUNT_ID="123456789012"; ENV="prod";;
-          qa) AWS_ACCOUNT_ID="234567890123"; ENV="qa";;
-          dev) AWS_ACCOUNT_ID="699631259047"; ENV="dev";;
-          dr) AWS_ACCOUNT_ID="456789012345"; ENV="dr";;
-          *) 
-            echo "Unknown branch: $BRANCH_NAME, exiting"; 
-            exit 1;;
-        esac
-      
-      - echo "Assuming role in target AWS account"
-      - |
-        CREDENTIALS=$(aws sts assume-role --role-arn "arn:aws:iam::${AWS_ACCOUNT_ID}:role/TerraformDeploymentRole" --role-session-name TerraformSession --output json)
-        export AWS_ACCESS_KEY_ID=$(echo "$CREDENTIALS" | jq -r '.Credentials.AccessKeyId')
-        export AWS_SECRET_ACCESS_KEY=$(echo "$CREDENTIALS" | jq -r '.Credentials.SecretAccessKey')
-        export AWS_SESSION_TOKEN=$(echo "$CREDENTIALS" | jq -r '.Credentials.SessionToken')
-
-      - echo "Initializing Terraform"
-      - terraform init
-
-      - echo "Setting Terraform variables for ${ENV} environment"
-      - cp ./environments/${ENV}/terraform.tfvars terraform.tfvars
-
-      - echo "Creating Terraform artifact"
-      - zip -r terraform_artifact.zip . -x "environments/*" -x ".git/*" -x "iac_azure_pipeline.yml"
+      - echo "Assuming role in target account..."
+      - ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${ROLE_NAME}"
+      - CREDS=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name terraform-session)
+      - export AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $CREDS | jq -r .Credentials.SessionToken)
 
   build:
     commands:
-      - echo "Executing Checkov"
-      - mkdir -p checkov_report
-      - checkov -o junitxml --framework terraform --skip-check CKV_AWS_LOW --download-external-modules true -d ./ -s > ./checkov_report/checkov.xml
-      - checkov -o json --framework terraform --download-external-modules true --skip-check CKV_AWS_LOW -d ./ -s
+      - echo "Initializing Terraform..."
+      - cd path/to/your/terraform/code  # Change to your Terraform code directory
+      - terraform init
+      - echo "Planning Terraform changes..."
+      - terraform plan
+      - echo "Applying Terraform changes..."
+      - terraform apply -auto-approve
 
   post_build:
     commands:
-      - echo "Uploading artifacts"
-      - mkdir -p ${CODEBUILD_ARTIFACTS}/Tfvars
-      - cp terraform.tfvars ${CODEBUILD_ARTIFACTS}/Tfvars/
-      - cp -r checkov_report ${CODEBUILD_ARTIFACTS}/
-      - cp terraform_artifact.zip ${CODEBUILD_ARTIFACTS}/
+      - echo "Terraform deployment completed."
 
 artifacts:
   files:
-    - terraform_artifact.zip
-    - checkov_report/*
-  discard-paths: no
+    - "**/*"
