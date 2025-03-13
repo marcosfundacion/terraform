@@ -19,11 +19,11 @@ phases:
           "refs/heads/dr") AWS_ACCOUNT_ID="456789012345"; ENV="dr";;
           *) echo "Unknown branch, exiting"; exit 1;;
         esac
-      - echo "Deploying to AWS Account: $AWS_ACCOUNT_ID for environment: $ENV"
+      - echo "Deploying to AWS Account: ${AWS_ACCOUNT_ID} for environment: ${ENV}"
 
       - echo "Assuming role in target AWS account"
       - |
-        CREDENTIALS=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID:role/TerraformDeploymentRole" --role-session-name TerraformSession)
+        CREDENTIALS=$(aws sts assume-role --role-arn "arn:aws:iam::${AWS_ACCOUNT_ID}:role/TerraformDeploymentRole" --role-session-name TerraformSession)
         export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')
         export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')
         export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')
@@ -31,8 +31,8 @@ phases:
       - echo "Initializing Terraform"
       - terraform init
 
-      - echo "Setting Terraform variables for $ENV environment"
-      - cp ./environments/$ENV/terraform.tfvars terraform.tfvars
+      - echo "Setting Terraform variables for ${ENV} environment"
+      - cp ./environments/${ENV}/terraform.tfvars terraform.tfvars
 
       - echo "Creating Terraform artifact"
       - zip -r terraform_artifact.zip . -x "environments/*" -x ".git/*" -x "iac_azure_pipeline.yml"
