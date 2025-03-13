@@ -19,7 +19,9 @@ resource "aws_instance" "web" {
   # checkov:skip=CKV_TF_*
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
-
+  subnet_id = "subnet-0b57ecda55d5312e4"
+  security_groups = "sg-00ec8fbcfb0ef2a34"
+  #vpc-08b1b053d7a483a2e
   tags = {
     Name = "HelloWorld"
   }
