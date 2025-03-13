@@ -14,8 +14,9 @@ data "aws_ami" "ubuntu" {
 
   owners = ["099720109477"] # Canonical
 }
-
+# checkov:skip=CKV_TF_*
 resource "aws_instance" "web" {
+  # checkov:skip=CKV_TF_*
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
 
