@@ -13,20 +13,21 @@ phases:
       - echo "Determining target AWS account based on environment"
       - |
         case "$CODEBUILD_SOURCE_VERSION" in
-          "refs/heads/prod") AWS_ACCOUNT_ID="123456789012"; ENV="prod";;
-          "refs/heads/qa") AWS_ACCOUNT_ID="234567890123"; ENV="qa";;
-          "refs/heads/dev") AWS_ACCOUNT_ID="699631259047"; ENV="dev";;
-          "refs/heads/dr") AWS_ACCOUNT_ID="456789012345"; ENV="dr";;
-          *) echo "Unknown branch, exiting"; exit 1;;
+          refs/heads/prod) AWS_ACCOUNT_ID="123456789012"; ENV="prod";;
+          refs/heads/qa) AWS_ACCOUNT_ID="234567890123"; ENV="qa";;
+          refs/heads/dev) AWS_ACCOUNT_ID="699631259047"; ENV="dev";;
+          refs/heads/dr) AWS_ACCOUNT_ID="456789012345"; ENV="dr";;
+          *) echo "Unknown branch: $CODEBUILD_SOURCE_VERSION, exiting"; exit 1;;
         esac
-      - echo "Deploying to AWS Account: ${AWS_ACCOUNT_ID} for environment: ${ENV}"
-
+        echo "Deploying to AWS Account: ${AWS_ACCOUNT_ID} for environment: ${ENV}"
+        export AWS_ACCOUNT_ID ENV
+      
       - echo "Assuming role in target AWS account"
       - |
-        CREDENTIALS=$(aws sts assume-role --role-arn "arn:aws:iam::${AWS_ACCOUNT_ID}:role/TerraformDeploymentRole" --role-session-name TerraformSession)
-        export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')
-        export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')
-        export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')
+        CREDENTIALS=$(aws sts assume-role --role-arn "arn:aws:iam::${AWS_ACCOUNT_ID}:role/TerraformDeploymentRole" --role-session-name TerraformSession --output json)
+        export AWS_ACCESS_KEY_ID=$(echo "$CREDENTIALS" | jq -r '.Credentials.AccessKeyId')
+        export AWS_SECRET_ACCESS_KEY=$(echo "$CREDENTIALS" | jq -r '.Credentials.SecretAccessKey')
+        export AWS_SESSION_TOKEN=$(echo "$CREDENTIALS" | jq -r '.Credentials.SessionToken')
 
       - echo "Initializing Terraform"
       - terraform init
