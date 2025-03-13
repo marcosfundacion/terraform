@@ -1,49 +1,62 @@
 version: 0.2
 
-env:
-  variables:
-    AWS_DEFAULT_REGION: us-east-1  # Change to your desired region
-    TF_VAR_region: us-east-1         # Change to your desired region
-    ACCOUNT_ID: "699631259047"       # Replace with your target account ID
-    ROLE_NAME: "TerraformDeploymentRole"  # Replace with your IAM role name
-    TF_VERSION: 1.11.1
-
 phases:
   install:
     runtime-versions:
-      python: 3.9  # Specify the Python version if needed
-      terraform: 1.11.0  # Specify the Terraform version
+      python: 3.9
     commands:
-      - echo "Installing dependencies..."
-      - pip install awscli  # Install AWS CLI if not already available
-      - curl -LO https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-      - unzip terraform_${TF_VERSION}_linux_amd64.zip
-      - mv terraform /usr/local/bin/
-      - terraform --version
+      - echo "Installing Checkov tool"
+      - pip install checkov
 
   pre_build:
     commands:
-      - echo "Assuming role in target account..."
-      - ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${ROLE_NAME}"
-      - CREDS=$(aws sts assume-role --role-arn $ROLE_ARN --role-session-name terraform-session)
-      - export AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r .Credentials.AccessKeyId)
-      - export AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r .Credentials.SecretAccessKey)
-      - export AWS_SESSION_TOKEN=$(echo $CREDS | jq -r .Credentials.SessionToken)
+      - echo "Configuring AWS CLI for multi-account role assumption"
+      - BRANCH_NAME=$(echo $CODEBUILD_SOURCE_VERSION | sed 's|refs/heads/||')
+      
+      - case "$BRANCH_NAME" in
+          prod) AWS_ROLE_ARN="arn:aws:iam::PROD_ACCOUNT_ID:role/ProdRole" ;;
+          qa) AWS_ROLE_ARN="arn:aws:iam::QA_ACCOUNT_ID:role/QARole" ;;
+          dev) AWS_ROLE_ARN="arn:aws:iam::699631259047:role/TerraformDeploymentRole" ;;
+          dr) AWS_ROLE_ARN="arn:aws:iam::DR_ACCOUNT_ID:role/DRRole" ;;
+          *) echo "Unknown branch $BRANCH_NAME" && exit 1 ;;
+        esac
+
+      - echo "Assuming role: $AWS_ROLE_ARN"
+      - ROLE_SESSION_NAME="CodeBuildSession"
+      - CREDENTIALS=$(aws sts assume-role --role-arn "$AWS_ROLE_ARN" --role-session-name "$ROLE_SESSION_NAME" --output json) || { echo "Failed to assume role"; exit 1; }
+      - export AWS_ACCESS_KEY_ID=$(echo "$CREDENTIALS" | jq -r '.Credentials.AccessKeyId')
+      - export AWS_SECRET_ACCESS_KEY=$(echo "$CREDENTIALS" | jq -r '.Credentials.SecretAccessKey')
+      - export AWS_SESSION_TOKEN=$(echo "$CREDENTIALS" | jq -r '.Credentials.SessionToken')
 
   build:
     commands:
-      - echo "Initializing Terraform..."
-      - cd path/to/your/terraform/code  # Change to your Terraform code directory
-      - terraform init
-      - echo "Planning Terraform changes..."
-      - terraform plan
-      - echo "Applying Terraform changes..."
-      - terraform apply -auto-approve
+      - echo "Running Terraform init"
+      - terraform init -backend-config="path=./backend.tf"
+
+      - echo "Current directory: $(pwd)"
+      - echo "Listing files:" && ls -a
+
+      - case "$BRANCH_NAME" in
+          prod) cp ./environments/prod/terraform.tfvars terraform.tfvars ;;
+          qa) cp ./environments/qa/terraform.tfvars terraform.tfvars ;;
+          dev) cp ./environments/dev/terraform.tfvars terraform.tfvars ;;
+          dr) cp ./environments/dr/terraform.tfvars terraform.tfvars ;;
+        esac
+
+      - echo "Zipping Terraform artifacts"
+      - zip -r terraform_artifact.zip . -x "environments/*" -x ".git/*" -x "iac_aws_buildspec.yml"
+
+      - echo "Running Checkov"
+      - mkdir -p checkov_report
+      - checkov -o junitxml --framework terraform --skip-check CKV_AWS_LOW --download-external-modules true -d ./ -s > ./checkov_report/checkov.xml
+      - checkov -o json --framework terraform --download-external-modules true --skip-check CKV_AWS_LOW -d ./ -s
 
   post_build:
     commands:
-      - echo "Terraform deployment completed."
+      - echo "Publishing Checkov Report"
+      - aws s3 cp checkov_report s3://your-bucket-name/checkov_report --recursive || { echo "Failed to upload report"; exit 1; }
 
 artifacts:
   files:
-    - "**/*"
+    - checkov_report/checkov.xml
+    - terraform_artifact.zip
