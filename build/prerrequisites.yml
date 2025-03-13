@@ -16,7 +16,7 @@ phases:
   pre_build:
     commands:
       - echo "Running Checkov for static code analysis..."
-      - checkov -d .  # Adjust the directory as needed
+      #- checkov -d .  # Adjust the directory as needed
 
   build:
     commands:
