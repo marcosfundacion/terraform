@@ -1,5 +1,9 @@
 version: 0.2
 
+env:
+  variables:
+    BRANCH_NAME: "dev"  # Cambia esta variable según la rama que quieras desplegar (dev, qa, prod, dr)
+
 phases:
   install:
     runtime-versions:
@@ -23,11 +27,31 @@ phases:
       - export AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r .Credentials.SessionToken)
+      - echo "Checking out branch $BRANCH_NAME..."
+      - git checkout $BRANCH_NAME
       - echo "Running Checkov for static code analysis..."
       #- checkov -d .  # Adjust the directory as needed
 
   build:
     commands:
+      - echo "Updating terraform vars based on branch..."
+      - pwd
+      - echo "See files"
+      - ls -a
+      - if [[ "$BRANCH_NAME" == "prod" ]]; then
+          echo "Using prod variables";
+          cp ./environments/prod/terraform.tfvars terraform.tfvars;
+        elif [[ "$BRANCH_NAME" == "qa" ]]; then
+          echo "Using QA variables";
+          cp ./environments/qa/terraform.tfvars terraform.tfvars;
+        elif [[ "$BRANCH_NAME" == "dev" ]]; then
+          echo "Using DEV variables";
+          cp ./environments/dev/terraform.tfvars terraform.tfvars;
+        elif [[ "$BRANCH_NAME" == "dr" ]]; then
+          echo "Using DR variables";
+          cp ./environments/dr/terraform.tfvars terraform.tfvars;
+        fi
+      - zip -r terraform_artifact.zip . -x "environments/*" -x ".git/*"
       - echo "Initializing Terraform..."
       - terraform init
       - echo "Planning Terraform deployment..."
