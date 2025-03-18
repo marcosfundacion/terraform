@@ -33,6 +33,3 @@ resource "aws_instance" "web" {
 }
 
 
-module "instance" {
-  source = "git::codecommit::us-east-1://my-repo?ref=refs/tags/v1.2.3"
-}
