@@ -28,7 +28,7 @@ resource "aws_instance" "web" {
   }
   #vpc-08b1b053d7a483a2e
   tags = {
-    Name = "HelloWorld"
+    Name = "HelloWorld2"
   }
 }
 

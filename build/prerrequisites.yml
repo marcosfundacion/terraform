@@ -37,9 +37,9 @@ phases:
       - echo "Initializing Terraform..."
       - terraform init
       - echo "Planning Terraform deployment..."
-      - terraform plan -out=tfplan
+      - terraform plan -out=tfplan -var-file=environments/dev/terraform.tfvars
       - echo "Applying Terraform deployment..."
-      - terraform apply -auto-approve tfplan
+      - terraform apply -auto-approve -var-file=environments/dev/terraform.tfvars tfplan
 
   post_build:
     commands:
