@@ -34,8 +34,13 @@ phases:
 
   build:
     commands:
+      - echo "Configuring Terraform backend..."
+      - echo "bucket = \"$TF_BACKEND_BUCKET\"" > backend.hcl
+      - echo "key = \"$TF_BACKEND_KEY\"" >> backend.hcl
+      - echo "dynamodb_table = \"$TF_BACKEND_DYNAMODB_TABLE\"" >> backend.hcl
+      - echo "encrypt = true" >> backend.hcl
       - echo "Initializing Terraform..."
-      - terraform init
+      - terraform init -backend-config=backend.hcl
       - echo "Planning Terraform deployment..."
       - terraform plan -out=tfplan -var-file=environments/$AMBIENTE/terraform.tfvars
       - echo "Applying Terraform deployment..."
