@@ -35,7 +35,6 @@ phases:
   build:
     commands:
       - echo "Initializing Terraform..."
-      - cd transversal
       - terraform init
       - echo "Planning Terraform deployment..."
       - terraform plan -out=tfplan -var-file=environments/$AMBIENTE/terraform.tfvars
