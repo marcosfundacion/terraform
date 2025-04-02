@@ -1,0 +1,68 @@
+name: Terraform Deploy
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.0
+          
+      - name: Configure AWS credentials (Principal Role)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github
+          aws-region: us-east-1
+          
+      - name: Terraform Init
+        run: terraform init
+          
+      - name: Terraform Format
+        run: terraform fmt -check
+        
+      - name: Assume Target Role
+        id: assume-target-role
+        run: |
+          CREDENTIALS=$(aws sts assume-role \
+            --role-arn "arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue" \
+            --role-session-name "TerraformDeploySession" \
+            --duration-seconds 3600)
+            
+          echo "::set-output name=aws_access_key_id::$(echo $CREDENTIALS | jq -r '.Credentials.AccessKeyId')"
+          echo "::set-output name=aws_secret_access_key::$(echo $CREDENTIALS | jq -r '.Credentials.SecretAccessKey')"
+          echo "::set-output name=aws_session_token::$(echo $CREDENTIALS | jq -r '.Credentials.SessionToken')"
+        
+      - name: Terraform Validate
+        run: terraform validate
+      
+      - name: Terraform Plan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.assume-target-role.outputs.aws_access_key_id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.assume-target-role.outputs.aws_secret_access_key }}
+          AWS_SESSION_TOKEN: ${{ steps.assume-target-role.outputs.aws_session_token }}
+        run: terraform plan -out=tfplan
+      
+      - name: Terraform Apply
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.assume-target-role.outputs.aws_access_key_id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.assume-target-role.outputs.aws_secret_access_key }}
+          AWS_SESSION_TOKEN: ${{ steps.assume-target-role.outputs.aws_session_token }}
+        run: terraform apply -auto-approve tfplan
