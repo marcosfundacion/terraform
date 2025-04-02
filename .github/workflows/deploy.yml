@@ -10,12 +10,23 @@ on:
 
 jobs:
   call-terraform-workflow:
-    uses: marcosfundacion/terraform-pipeline/deploy.yml@main
-    with:
-      working-directory: './terraform'
-      terraform-version: '1.3.0'
-      aws-region: 'us-east-1'
-      principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
-      target-role-arn: 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue'
-      environment: 'dev'
-      var-file-path: 'environments/dev/terraform.tfvars'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configurar credenciales de Git
+        run: |
+          echo "https://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:x-oauth-basic@github.com" > ~/.git-credentials
+          git config --global credential.helper store
+
+      - name: Llamar al pipeline de otro repositorio
+        uses: marcosfundacion/terraform-pipeline/deploy.yml@main
+        with:
+          working-directory: './terraform'
+          terraform-version: '1.3.0'
+          aws-region: 'us-east-1'
+          principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
+          target-role-arn: 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue'
+          environment: 'dev'
+          var-file-path: 'environments/dev/terraform.tfvars'
