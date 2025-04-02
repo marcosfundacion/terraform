@@ -10,17 +10,16 @@ on:
 
 jobs:
   call-terraform-workflow:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    # runs-on: ubuntu-latest
+    # steps:
+    #   - name: Checkout code
+    #     uses: actions/checkout@v2
 
-      - name: Configurar credenciales de Git
-        run: |
-          echo "https://${{ secrets.REPO_ACCESS_TOKEN }}:x-oauth-basic@github.com" > ~/.git-credentials
-          git config --global credential.helper store
+      # - name: Configurar credenciales de Git
+      #   run: |
+      #     echo "https://${{ secrets.REPO_ACCESS_TOKEN }}:x-oauth-basic@github.com" > ~/.git-credentials
+      #     git config --global credential.helper store
 
-      - name: Llamar al pipeline de otro repositorio
         uses: marcosfundacion/terraform-pipeline/.github/workflows/deploy.yml@main
         with:
           working-directory: './terraform'
