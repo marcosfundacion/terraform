@@ -55,7 +55,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ steps.assume-target-role.outputs.aws_access_key_id }}
           AWS_SECRET_ACCESS_KEY: ${{ steps.assume-target-role.outputs.aws_secret_access_key }}
           AWS_SESSION_TOKEN: ${{ steps.assume-target-role.outputs.aws_session_token }}
-        run: terraform plan -out=tfplan -var-file=environments/$AMBIENTE/terraform.tfvars
+        run: terraform plan -out=tfplan -var-file=environments/dev/terraform.tfvars
       
       - name: Terraform Apply
         env:
