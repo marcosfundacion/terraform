@@ -17,7 +17,7 @@ jobs:
 
       # - name: Configurar credenciales de Git
       #   run: |
-      
+
       #     echo "https://${{ secrets.REPO_ACCESS_TOKEN }}:x-oauth-basic@github.com" > ~/.git-credentials
       #     git config --global credential.helper store
 
@@ -31,4 +31,4 @@ jobs:
           environment: 'dev'
           var-file-path: 'environments/dev/terraform.tfvars'
         secrets:
-          personal_access_token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.personal_access_token }}
