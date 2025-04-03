@@ -10,7 +10,6 @@ terraform {
     encrypt = true
     bucket         = "${TF_BACKEND_BUCKET}"
     key            = "${TF_BACKEND_KEY}"
-    dynamodb_table = "${TF_BACKEND_DYNAMODB_TABLE}"
   }
 }
 
