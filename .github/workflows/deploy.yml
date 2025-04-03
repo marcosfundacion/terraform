@@ -17,31 +17,49 @@ permissions:
   contents: read
 
 jobs:
-  # Llamada al workflow de prerequisites
+  # Llamada al workflow de prerequisites (init)
   prerequisites:
-    uses: marcosfundacion/pipeline/.github/workflows/prerequisites.yml@main
-  
-  # Llamada al workflow de plan
-  planning:
-    needs: prerequisites
-    uses: marcosfundacion/pipeline/.github/workflows/plan_iac.yml@main
+    uses: marcosfundacion/pipeline/.github/workflows/init.yml@main
     with:
       principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
-      target-role-arn: ${{ 
+      target-role-arn: ${{
         github.ref_name == 'prod' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-prod-role-despliegue' ||
         github.ref_name == 'qa' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-qa-role-despliegue' ||
         github.ref_name == 'dev' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue' ||
         github.ref_name == 'dr' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dr-role-despliegue'}}
-  
-  # Llamada al workflow de deploy
-  deploy:
-    needs: planning
-    uses: marcosfundacion/pipeline/.github/workflows/deploy_iac.yml@main
-    with:
-      principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
-      target-role-arn: ${{ 
-        github.ref_name == 'prod' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-prod-role-despliegue' ||
-        github.ref_name == 'qa' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-qa-role-despliegue' ||
-        github.ref_name == 'dev' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue' ||
-        github.ref_name == 'dr' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dr-role-despliegue'}}
+      branch-name: ${{ github.ref_name }}
       environment: ${{ github.ref_name }}
+      region: 'us-east-1'
+      tf-backend-bucket: 'terraform-backend-190018864982'
+      tf-backend-key: 'infrastructure/terraform.tfstate'
+    secrets:
+      CX_API_KEY: ${{ secrets.CX_API_KEY }}
+      CX_TENANT: ${{ secrets.CX_TENANT }}
+
+  # # Llamada al workflow de plan
+  # planning:
+  #   needs: prerequisites
+  #   uses: ./.github/workflows/plan_iac.yml@main
+  #   with:
+  #     principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
+  #     target-role-arn: ${{
+  #       github.ref_name == 'prod' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-prod-role-despliegue' ||
+  #       github.ref_name == 'qa' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-qa-role-despliegue' ||
+  #       github.ref_name == 'dev' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue' ||
+  #       github.ref_name == 'dr' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dr-role-despliegue'}}
+  #     branch-name: ${{ github.ref_name }}
+  #     environment: ${{ github.ref_name }}
+
+  # # Llamada al workflow de deploy
+  # deploy:
+  #   needs: planning
+  #   uses: ./.github/workflows/deploy_iac.yml@main
+  #   with:
+  #     principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
+  #     target-role-arn: ${{
+  #       github.ref_name == 'prod' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-prod-role-despliegue' ||
+  #       github.ref_name == 'qa' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-qa-role-despliegue' ||
+  #       github.ref_name == 'dev' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue' ||
+  #       github.ref_name == 'dr' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dr-role-despliegue'}}
+  #     branch-name: ${{ github.ref_name }}
+  #     environment: ${{ github.ref_name }}
