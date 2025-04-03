@@ -29,6 +29,9 @@ jobs:
     uses: marcosfundacion/pipeline/.github/workflows/init.yml@main
     with:
       branch_name: ${{ needs.set-environment.outputs.branch_name }}
+      tf_backend_bucket: 'terraform-backend-699631259047'
+      tf_backend_key: 'prueba/tfstate'
+      tf_backend_dynamodb_table: 'terraform-backend-lock'
     secrets:
       aws_region: 'us-east-1'
       aws_primary_role_arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'

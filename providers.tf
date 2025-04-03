@@ -6,12 +6,12 @@ terraform {
     }
   }
 
-  # backend "s3" {
-  #   encrypt = true
-  #   bucket         = "${TF_BACKEND_BUCKET}"
-  #   key            = "${TF_BACKEND_KEY}"
-
-  # }
+  backend "s3" {
+    encrypt = true
+    bucket         = "${tf_backend_bucket}"
+    key            = "${tf_backend_key}"
+    dynamodb_table = "${tf_backend_dynamodb_table}"
+  }
 }
 
 provider "aws" {
