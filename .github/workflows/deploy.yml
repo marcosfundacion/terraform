@@ -34,5 +34,5 @@ jobs:
           target-role-arn: 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue'
           environment: 'dev'
           var-file-path: 'environments/dev/terraform.tfvars'
-        secrets:
-          personal_access_token: ${{ secrets.personal_access_token }}
+        # secrets:
+        #   personal_access_token: ${{ secrets.personal_access_token }}
