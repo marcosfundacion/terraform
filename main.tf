@@ -22,6 +22,7 @@ resource "aws_instance" "web" {
   vpc_security_group_ids = [ "sg-00ec8fbcfb0ef2a34" ]
   root_block_device {
     volume_size = 10
+    
     volume_type = "gp3"
     encrypted = true
 
