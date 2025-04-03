@@ -30,8 +30,8 @@ jobs:
       branch-name: ${{ github.ref_name }}
       environment: ${{ github.ref_name }}
       region: 'us-east-1'
-      tf-backend-bucket: 'terraform-backend-190018864982'
-      tf-backend-key: 'infrastructure/terraform.tfstate'
+      tf-backend-bucket: 'terraform-backend-699631259047'
+      tf-backend-key: 'infrastructure/tfstate'
     secrets:
       CX_API_KEY: ${{ secrets.CX_API_KEY }}
       CX_TENANT: ${{ secrets.CX_TENANT }}
