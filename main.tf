@@ -9,6 +9,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "virtualization-type"
+    
     values = ["hvm"]
   }
   owners = ["099720109477"] # Canonical
@@ -24,7 +25,7 @@ resource "aws_instance" "web" {
     volume_size = 10
     volume_type = "gp3"
     encrypted = true
-    
+
 
   }
   #vpc-08b1b053d7a483a2e
