@@ -7,8 +7,6 @@ on:
       - qa
       - dev
       - dr
-    paths-ignore:
-      - '.github/workflows/**'
 
 # These permissions are needed to allow OIDC authentication
 permissions:
