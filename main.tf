@@ -18,7 +18,6 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "web" {
 
 
- 
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
   subnet_id = "subnet-0b57ecda55d5312e4"
