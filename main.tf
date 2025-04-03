@@ -27,6 +27,7 @@ resource "aws_instance" "web" {
     volume_type = "gp3"
     encrypted = true
 
+
   }
   #vpc-08b1b053d7a483a2e
   tags = {
