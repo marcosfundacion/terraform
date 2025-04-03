@@ -27,7 +27,7 @@ jobs:
 
         uses: marcosfundacion/pipeline/.github/workflows/deploy.yml@main
         with:
-          working-directory: './terraform'
+          working-directory: '.'
           terraform-version: '1.3.0'
           aws-region: 'us-east-1'
           principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
