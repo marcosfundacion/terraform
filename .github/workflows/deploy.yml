@@ -37,13 +37,13 @@ jobs:
       aws_primary_role_arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
       aws_target_role_arn: 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue'
 
-  # call-validation:
-  #   needs: call-prerequisites
-  #   uses: org-name/repo-name-iac-workflows/.github/workflows/plan_iac.yml@main
-  #   secrets:
-  #     aws_region: ${{ secrets.AWS_REGION }}
-  #     aws_primary_role_arn: ${{ secrets.AWS_PRIMARY_ROLE_ARN }}
-  #     aws_target_role_arn: ${{ secrets.AWS_TARGET_ROLE_ARN }}
+  call-validation:
+    needs: call-prerequisites
+    uses: marcosfundacion/pipeline/.github/workflows/plan.yml@main
+    secrets:
+      aws_region: 'us-east-1'
+      aws_primary_role_arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
+      aws_target_role_arn: 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue'
 
   # call-deployment:
   #   needs: call-validation
