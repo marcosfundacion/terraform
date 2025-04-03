@@ -1,65 +1,24 @@
-name: Terraform Deployment Pipeline
+name: "Terraform Deployment"
 
-# Configuración de triggers
 on:
   push:
     branches:
-      - prod
-      - qa
       - dev
+      - qa
+      - prod
       - dr
-    paths-ignore:
-      - '.github/workflows/sample-workflow.yml'
-
-# Permiso para solicitar el token JWT para la autenticación OIDC
-permissions:
-  id-token: write
-  contents: read
+  workflow_dispatch:
 
 jobs:
-  # Llamada al workflow de prerequisites (init)
-  prerequisites:
+  terraform-init:
+    name: "Initialize Terraform"
     uses: marcosfundacion/pipeline/.github/workflows/init.yml@main
     with:
-      principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
-      target-role-arn: ${{
-        github.ref_name == 'prod' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-prod-role-despliegue' ||
-        github.ref_name == 'qa' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-qa-role-despliegue' ||
-        github.ref_name == 'dev' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue' ||
-        github.ref_name == 'dr' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dr-role-despliegue'}}
-      branch-name: ${{ github.ref_name }}
-      environment: ${{ github.ref_name }}
-      region: 'us-east-1'
-      tf-backend-bucket: 'terraform-backend-699631259047'
-      tf-backend-key: 'infrastructure/tfstate'
+      aws_region: "us-east-1"
+      terraform_version: "1.5.7"
+      backend_s3_bucket: "terraform-backend-190018864982"
+      backend_key_prefix: "terraform/state"
     secrets:
-      CX_API_KEY: ${{ secrets.CX_API_KEY }}
-      CX_TENANT: ${{ secrets.CX_TENANT }}
+      OIDC_ROLE_ARN: ${{ secrets.OIDC_ROLE_ARN }}
+      TARGET_ROLE_ARN: ${{ secrets.TARGET_ROLE_ARN }}
 
-  # # Llamada al workflow de plan
-  # planning:
-  #   needs: prerequisites
-  #   uses: ./.github/workflows/plan_iac.yml@main
-  #   with:
-  #     principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
-  #     target-role-arn: ${{
-  #       github.ref_name == 'prod' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-prod-role-despliegue' ||
-  #       github.ref_name == 'qa' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-qa-role-despliegue' ||
-  #       github.ref_name == 'dev' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue' ||
-  #       github.ref_name == 'dr' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dr-role-despliegue'}}
-  #     branch-name: ${{ github.ref_name }}
-  #     environment: ${{ github.ref_name }}
-
-  # # Llamada al workflow de deploy
-  # deploy:
-  #   needs: planning
-  #   uses: ./.github/workflows/deploy_iac.yml@main
-  #   with:
-  #     principal-role-arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
-  #     target-role-arn: ${{
-  #       github.ref_name == 'prod' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-prod-role-despliegue' ||
-  #       github.ref_name == 'qa' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-qa-role-despliegue' ||
-  #       github.ref_name == 'dev' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue' ||
-  #       github.ref_name == 'dr' && 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dr-role-despliegue'}}
-  #     branch-name: ${{ github.ref_name }}
-  #     environment: ${{ github.ref_name }}
