@@ -10,6 +10,7 @@ terraform {
     encrypt = true
     bucket         = "${TF_BACKEND_BUCKET}"
     key            = "${TF_BACKEND_KEY}"
+    
   }
 }
 
