@@ -54,7 +54,7 @@ jobs:
       issue_title: "Aprobar despliegue de Terraform"
       issue_body: "Por favor revisa el plan de Terraform y aprueba para continuar con el despliegue"
     secrets:
-      approvers: marcos.garzon@fsfb.org.co
+      approvers: marcosfundacion
 
   call-deployment:
     needs: call-approval
