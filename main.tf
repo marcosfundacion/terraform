@@ -11,7 +11,7 @@ data "aws_ami" "ubuntu" {
     name   = "virtualization-type"
     values = ["hvm"]
   }
-  
+
 
 
 
@@ -22,7 +22,7 @@ resource "aws_instance" "web" {
   # checkov:skip=CKV_TF_*
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
-  subnet_id = "subnet-0b57ecda55d5312e4"
+  subnet_id = "subnet-00f90866a7666add2"
   security_groups = ["sg-00ec8fbcfb0ef2a34"]
   root_block_device {
     volume_size = 10
