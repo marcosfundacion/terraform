@@ -44,9 +44,19 @@ jobs:
       aws_region: 'us-east-1'
       aws_primary_role_arn: 'arn:aws:iam::754478843459:role/fsfb-arquitectura-despliegue-github'
       aws_target_role_arn: 'arn:aws:iam::699631259047:role/fsfb-arquitectura-dev-role-despliegue'
+    
+  call-approval:
+    needs: [call-validation, set-environment]
+    uses: marcosfundacion/pipeline/.github/workflows/approval.yml@main
+    with:
+      environment_name: ${{ needs.set-environment.outputs.branch_name }}
+      issue_title: "Aprobar despliegue de Terraform"
+      issue_body: "Por favor revisa el plan de Terraform y aprueba para continuar con el despliegue"
+    secrets:
+      approvers: marcos.garzon@fsfb.org.co
 
   call-deployment:
-    needs: call-validation
+    needs: call-approval
     uses: marcosfundacion/pipeline/.github/workflows/deploy.yml@main
     secrets:
       aws_region: 'us-east-1'
