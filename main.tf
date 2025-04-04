@@ -26,7 +26,7 @@ resource "aws_instance" "web" {
   subnet_id = "subnet-0b57ecda55d5312e4"
   vpc_security_group_ids = [ "sg-00ec8fbcfb0ef2a34" ]
   root_block_device {
-    volume_size = 10
+    volume_size = 20
     volume_type = "gp3"
     encrypted = true
 
