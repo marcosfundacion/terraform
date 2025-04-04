@@ -23,7 +23,7 @@ resource "aws_instance" "web" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
   subnet_id = "subnet-00f90866a7666add2"
-  security_groups = ["sg-00ec8fbcfb0ef2a34"]
+  security_groups = ["sg-038abb3800add7922"]
   root_block_device {
     volume_size = 10
     volume_type = "gp3"
