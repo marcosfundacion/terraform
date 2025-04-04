@@ -53,8 +53,8 @@ jobs:
       environment_name: ${{ needs.set-environment.outputs.branch_name }}
       issue_title: "Aprobar despliegue de Terraform"
       issue_body: "Por favor revisa el plan de Terraform y aprueba para continuar con el despliegue"
-    # secrets:
-    #   approvers: marcosfundacion
+    secrets:
+      approvers: marcosfundacion
 
   call-deployment:
     needs: call-approval
